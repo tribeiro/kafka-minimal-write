@@ -16,6 +16,13 @@ KAFKA_BROKER_ADDR = os.environ.get("LSST_KAFKA_BROKER_ADDR", "127.0.0.1:9092")
 
 print(f"{KAFKA_BROKER_ADDR=}")
 
+class StoreProducerStats:
+    producer_stats = []
+
+    def stats_callback(self, stats_json_str):
+        stats = json.loads(stats_json_str)
+        self.producer_stats.append(stats)
+        # Process or print metrics as needed
 
 def create_topics(
     topic_names: list[str],
@@ -110,6 +117,7 @@ def main():
     username = os.environ.get("LSST_KAFKA_SECURITY_USERNAME", None)
     password = os.environ.get("LSST_KAFKA_SECURITY_PASSWORD", None)
 
+    store_producer_stats = StoreProducerStats()
     producer_configuration = {
             "acks": acks,
             "queue.buffering.max.ms": 0,
@@ -119,6 +127,8 @@ def main():
             "sasl.username": username,
             "sasl.password": password,
             "api.version.request": True,
+            "statistics.interval.ms": 5000,
+            "stats_cb": store_producer_stats.stats_callback,
     }
 
     if username is None:
@@ -171,6 +181,10 @@ def main():
         producer.flush()
     dt = time.time() - t1
     print(f"Wrote {args.number/dt:0.1f} messages/second, {len(raw_data)/1000/dt:0.1f} k-bytes/s: {args} (after the first message)")
+    producer_stats_filename = f"producer_stats_{args.index:04}.json"
+    print(f"Storing producer statistics in {producer_stats_filename}.")
+    with open(producer_stats_filename, "w") as fp:
+        fp.write(json.dumps(store_producer_stats.producer_stats))
 
-
-main()
+if __name__ == "__main__":
+    main()
