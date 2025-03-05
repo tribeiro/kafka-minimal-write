@@ -111,6 +111,7 @@ def main():
         topic_names=[topic_name],
         broker_addr=KAFKA_BROKER_ADDR,
         num_partitions=args.partitions,
+        replication_factor=3,
     )
 
     print(f"Create a producer with {acks=}")
