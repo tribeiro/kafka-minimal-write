@@ -57,6 +57,8 @@ def create_topics(
     if username is None:
         admin_client_config.pop("security.protocol")
         admin_client_config.pop("sasl.mechanism")
+        admin_client_config.pop("sasl.username")
+        admin_client_config.pop("sasl.password")
     
     broker_client = AdminClient(
             admin_client_config,
@@ -108,8 +110,7 @@ def main():
     username = os.environ.get("LSST_KAFKA_SECURITY_USERNAME", None)
     password = os.environ.get("LSST_KAFKA_SECURITY_PASSWORD", None)
 
-    producer = Producer(
-        {
+    producer_configuration = {
             "acks": acks,
             "queue.buffering.max.ms": 0,
             "bootstrap.servers": KAFKA_BROKER_ADDR,
@@ -118,7 +119,16 @@ def main():
             "sasl.username": username,
             "sasl.password": password,
             "api.version.request": True,
-        }
+    }
+
+    if username is None:
+        producer_configuration.pop("sasl.username")
+        producer_configuration.pop("sasl.password")
+        producer_configuration.pop("security.protocol")
+        producer_configuration.pop("sasl.mechanism")
+
+    producer = Producer(
+        producer_configuration
     )
     producer.list_topics()
     print("before prod.")
