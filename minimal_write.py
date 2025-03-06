@@ -101,6 +101,12 @@ def main():
         default=1,
         help="The number of partitions per topic.",
     )
+    parser.add_argument(
+        "--replication",
+        type=int,
+        default=3,
+        help="The number of partitions per topic.",
+    )
     args = parser.parse_args()
 
     topic_name = f"lsst.sal.minimal.test.topic{args.index:04}"
@@ -111,7 +117,7 @@ def main():
         topic_names=[topic_name],
         broker_addr=KAFKA_BROKER_ADDR,
         num_partitions=args.partitions,
-        replication_factor=3,
+        replication_factor=args.replication,
     )
 
     print(f"Create a producer with {acks=}")
